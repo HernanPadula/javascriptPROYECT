@@ -22,18 +22,34 @@
 //   }
   
 // }
-const carro = [];
+let juegos;
+obtenerJuegosJson();
+
+let carro = JSON.parse(localStorage.getItem('carro')) || [];
 
 let titulo = document.getElementById('titulo');
 titulo.style.font = '70px poppins';
 
 let parrafos = document.getElementsByTagName('p');
 
-let tabla = document.getElementById('tablaCarrito')
+let tabla = document.getElementById('tablaCarrito');
 
 parrafos[1].innerText = new Date().toLocaleDateString();
 
 let cartasJuegos = document.getElementById('cartas');
+
+(carro.length != 0) && llenarTabla()
+
+ function llenarTabla(){
+  for (const juego of carro){
+    tabla.innerHTML += `
+    <tr> 
+      <td>${juego.nombre}</td>
+      <td>$ ${juego.precio}</td>
+    </tr>
+    `;
+  }
+};
 
 function crearCards(listaJuegos){
 for(const juego of listaJuegos){
@@ -57,11 +73,11 @@ for(const juego of listaJuegos){
         const juegoACarro = juegos.find((juego) => juego.id == boton.id);
         console.log(juegoACarro);
         agregarAlCarro(juegoACarro);
+        sumarTotal(juegoACarro);
       })
   }
-}
+};
 
-crearCards(juegos);
 
 function agregarAlCarro(juego){
   carro.push(juego);
@@ -69,8 +85,49 @@ function agregarAlCarro(juego){
   tabla.innerHTML += `
     <tr> 
       <td>${juego.nombre}</td>
-      <td>${juego.precio}</td>
+      <td>$ ${juego.precio}</td>
     </tr>
   `;
-  localStorage.setItem(juego.nombre,juego.precio);
-}
+  localStorage.setItem('carro',JSON.stringify(carro));
+  
+  Swal.fire({
+    imageUrl: juego.img,
+    imageHeight: 400,
+    title: juego.nombre,
+  })
+};
+  
+function sumarTotal (juego){
+    let total = carro.reduce((acumulador,juego) =>
+      acumulador + juego.precio,0);
+      document.getElementById('totalSumado').innerText = `Total a Pagar: $ ${total}`;
+  };
+
+  let botonFinal = document.getElementById('BtnFinalizar');
+
+  let botonBorrar = document.getElementById('btnBorrar');
+
+  let confetti = new Confetti('BtnFinalizar');
+
+  botonFinal.onclick = () => {
+    carro=[];
+    document.getElementById('tablaCarrito').innerHTML='';
+    document.getElementById('totalSumado').innerText = `Total a Pagar: $ `;
+    localStorage.clear();
+  };
+
+  botonBorrar.onclick = () => {
+    carro=[];
+    document.getElementById('tablaCarrito').innerHTML='';
+    document.getElementById('totalSumado').innerText = `Total a Pagar: $ `;
+    localStorage.clear();
+  };
+
+  async function obtenerJuegosJson(){
+    const URLJSON = '../arrayJuegos.json';
+    const respuesta = await fetch(URLJSON);
+    const datos = await respuesta.json();
+    console.log(datos);
+    juegos = datos
+    crearCards(juegos);
+  }
